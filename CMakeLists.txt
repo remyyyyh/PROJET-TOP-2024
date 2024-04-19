@@ -4,6 +4,11 @@ project(top-stencil LANGUAGES C DESCRIPTION "3D stencil with MPI")
 set(CMAKE_COLOR_DIAGNOSTICS ON)
 set(CMAKE_C_STANDARD 17)
 
+
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}  -lmpi")
+
+add_compile_options(-Wall -Wextra -Wconversion -O3 -g)
+
 if(CMAKE_BUILD_TYPE EQUAL Debug)
     add_compile_options(-Wall)
 endif()
