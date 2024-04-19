@@ -1,0 +1,4 @@
+dim_x=100
+dim_y=100
+dim_z=100
+niter=10
