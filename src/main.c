@@ -52,10 +52,9 @@ static void save_results(
         fprintf(
             ofp,
             "%+18.15lf %12.9lf %12.3lf %zu %zu %zu\n",
-            mesh->cells[mid_x - comm_handler->coord_x + STENCIL_ORDER]
+            mesh->cells.value[mid_x - comm_handler->coord_x + STENCIL_ORDER]
                        [mid_y - comm_handler->coord_y + STENCIL_ORDER]
-                       [mid_z - comm_handler->coord_z + STENCIL_ORDER]
-                           .value,
+                       [mid_z - comm_handler->coord_z + STENCIL_ORDER],
             glob_elapsed_s / (f64)comm_size,
             glob_ns_per_elem / (f64)comm_size,
             cfg->dim_x,
