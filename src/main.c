@@ -45,7 +45,7 @@ static void save_results(
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     i32 comm_size;
     MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
-    if (rank != 0) MPI_Allreduce(&loc_elapsed_s, &glob_elapsed_s, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(&loc_elapsed_s, &glob_elapsed_s, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     MPI_Allreduce(&loc_ns_per_elem, &glob_ns_per_elem, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
     if (mid_x_is_in && mid_y_is_in && mid_z_is_in) {
