@@ -50,6 +50,7 @@ def compare(ref: StencilResults, res: StencilResults) -> None:
     # Compare runtimes
     avg_runtime_ref = np.mean(ref.runtime)
     avg_runtime_res = np.mean(res.runtime)
+    
     acc = ((avg_runtime_ref / avg_runtime_res) - 1.0) * 100.0
     if avg_runtime_ref < avg_runtime_res:
         print(f"\x1b[31mReference is {-acc:.2f}% faster than result\x1b[0m")
