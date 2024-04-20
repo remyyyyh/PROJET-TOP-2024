@@ -7,16 +7,18 @@ set(CMAKE_C_STANDARD 17)
 
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}  -lmpi")
 
-add_compile_options(-Wall -Wextra -Wconversion -O3 -g)
+add_compile_options(-O3 -g)
 
 if(CMAKE_BUILD_TYPE EQUAL Debug)
-    add_compile_options(-Wall)
+    add_compile_options(-Wall -Wextra -Wconversion)
 endif()
-
-find_package(MPI REQUIRED)
 
 add_subdirectory(src)
 
 add_executable(top-stencil src/main.c)
 target_include_directories(top-stencil PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(top-stencil PRIVATE stencil::stencil stencil::utils)
+
+
+find_package(MPI REQUIRED)
+target_link_libraries(top-stencil PRIVATE MPI::MPI_C)
