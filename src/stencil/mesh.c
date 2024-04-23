@@ -8,32 +8,31 @@
 mesh_t mesh_new(usz dim_x, usz dim_y, usz dim_z, mesh_kind_t kind)
 {
     usz const ghost_size = 2 * STENCIL_ORDER;
+    
+    f64*** value = (f64 ***)aligned_alloc(32,(dim_x + ghost_size) * sizeof(f64 **));
+    cell_kind_t*** kind_cell = (cell_kind_t ***)aligned_alloc(32,(dim_x + ghost_size) * sizeof(cell_kind_t **));
 
-    cell_t cells;
-    cells.value = (f64 ***)aligned_alloc(32,(dim_x + ghost_size) * sizeof(f64 **));
-    cells.kind = (cell_kind_t ***)aligned_alloc(32,(dim_x + ghost_size) * sizeof(cell_kind_t **));
-
-    if (NULL == cells.value || NULL == cells.kind)
+    if (NULL == value || NULL == kind_cell)
     {
         error("failed to allocate dimension X of mesh of size %zu bytes", dim_x + ghost_size);
     }
 
     for (usz i = 0; i < dim_x + ghost_size; ++i)
     {
-        cells.value[i] = (f64 **)aligned_alloc(32,(dim_x + ghost_size) * sizeof(f64 *));
-        cells.kind[i] = (cell_kind_t **)aligned_alloc(32,(dim_x + ghost_size) * sizeof(cell_kind_t *));
+        value[i] = (f64 **)aligned_alloc(32,(dim_x + ghost_size) * sizeof(f64 *));
+        kind_cell[i] = (cell_kind_t **)aligned_alloc(32,(dim_x + ghost_size) * sizeof(cell_kind_t *));
 
-        if (NULL == cells.value[i]|| NULL == cells.kind[i])
+        if (NULL == value[i]|| NULL == kind_cell[i])
         {
             error("failed to allocate dimension Y of mesh of size %zu bytes", dim_y + ghost_size);
         }
 
         for (usz j = 0; j < dim_y + ghost_size; ++j)
         {
-            cells.value[i][j] = (f64 *)aligned_alloc(32,(dim_x + ghost_size) * sizeof(f64));
-            cells.kind[i][j] = (cell_kind_t *)aligned_alloc(32,(dim_x + ghost_size) * sizeof(cell_kind_t ));
+            value[i][j] = (f64 *)aligned_alloc(32,(dim_x + ghost_size) * sizeof(f64));
+            kind_cell[i][j] = (cell_kind_t *)aligned_alloc(32,(dim_x + ghost_size) * sizeof(cell_kind_t ));
 
-            if (NULL == cells.value[i][j] || NULL == cells.kind[i][j])
+            if (NULL == value[i][j] || NULL == kind_cell[i][j])
             {
                 error(
                     "failed to allocate dimension Z of mesh of size %zu bytes", dim_z + ghost_size);
@@ -45,37 +44,38 @@ mesh_t mesh_new(usz dim_x, usz dim_y, usz dim_z, mesh_kind_t kind)
         .dim_x = dim_x + ghost_size,
         .dim_y = dim_y + ghost_size,
         .dim_z = dim_z + ghost_size,
-        .cells = cells,
+        .value = value,
+        .kind_cell= kind_cell,
         .kind = kind,
     };
 }
 
 void mesh_drop(mesh_t *self)
 {
-    if (NULL != self->cells.value)
+    if (NULL != self->value)
     {
         for (usz i = 0; i < self->dim_x; ++i)
         {
             for (usz j = 0; j < self->dim_y; ++j)
             {
-                free(self->cells.value[i][j]);
+                free(self->value[i][j]);
             }
-            free(self->cells.value[i]);
+            free(self->value[i]);
         }
-        free(self->cells.value);
+        free(self->value);
     }
 
-    if (NULL != self->cells.kind)
+    if (NULL != self->kind_cell)
     {
         for (usz i = 0; i < self->dim_x; ++i)
         {
             for (usz j = 0; j < self->dim_y; ++j)
             {
-                free(self->cells.kind[i][j]);
+                free(self->kind_cell[i][j]);
             }
-            free(self->cells.kind[i]);
+            free(self->kind_cell[i]);
         }
-        free(self->cells.kind);
+        free(self->kind_cell);
     }
 }
 
@@ -109,8 +109,8 @@ void mesh_print(mesh_t const *self, char const *name)
             {
                 printf(
                     "%s%6.3lf%s ",
-                    CELL_KIND_CORE == self->cells.kind[i][j][k] ? "\x1b[1m" : "",
-                    self->cells.value[i][j][k],
+                    CELL_KIND_CORE == self->kind_cell[i][j][k] ? "\x1b[1m" : "",
+                    self->value[i][j][k],
                     "\x1b[0m");
             }
             puts("");
@@ -145,9 +145,9 @@ void mesh_copy_core(mesh_t *dst, mesh_t const *src)
         {
             for (usz i = STENCIL_ORDER; i < dst->dim_x - STENCIL_ORDER; ++i)
             {
-                assert(dst->cells.kind[i][j][k] == CELL_KIND_CORE);
-                assert(src->cells.kind[i][j][k] == CELL_KIND_CORE);
-                dst->cells.value[i][j][k] = src->cells.value[i][j][k];
+                assert(dst->kind_cell[i][j][k] == CELL_KIND_CORE);
+                assert(src->kind_cell[i][j][k] == CELL_KIND_CORE);
+                dst->value[i][j][k] = src->value[i][j][k];
             }
         }
     }

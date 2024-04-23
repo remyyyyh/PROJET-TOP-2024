@@ -26,21 +26,21 @@ void solve_jacobi(mesh_t* A, mesh_t const* B, mesh_t* C) {
     for (usz k = STENCIL_ORDER; k < dim_z - STENCIL_ORDER; ++k) {
         for (usz j = STENCIL_ORDER; j < dim_y - STENCIL_ORDER; ++j) {
             for (usz i = STENCIL_ORDER; i < dim_x - STENCIL_ORDER; ++i) {
-				C->cells.value[i][j][k] = A->cells.value[i][j][k] * B->cells.value[i][j][k];
+				C->value[i][j][k] = A->value[i][j][k] * B->value[i][j][k];
 
 				for (usz o = 1; o <= STENCIL_ORDER; ++o) {
-					C->cells.value[i][j][k] += A->cells.value[i + o][j][k] *
-											B->cells.value[i + o][j][k] / pow(17.0, (f64)o);
-					C->cells.value[i][j][k] += A->cells.value[i - o][j][k] *
-											B->cells.value[i - o][j][k] / pow(17.0, (f64)o);
-					C->cells.value[i][j][k] += A->cells.value[i][j + o][k] *
-											B->cells.value[i][j + o][k] / pow(17.0, (f64)o);
-					C->cells.value[i][j][k] += A->cells.value[i][j - o][k] *
-											B->cells.value[i][j - o][k] / pow(17.0, (f64)o);
-					C->cells.value[i][j][k] += A->cells.value[i][j][k + o] *
-											B->cells.value[i][j][k + o] / pow(17.0, (f64)o);
-					C->cells.value[i][j][k] += A->cells.value[i][j][k - o] *
-											B->cells.value[i][j][k - o] / pow(17.0, (f64)o);
+					C->value[i][j][k] += A->value[i + o][j][k] *
+											B->value[i + o][j][k] / pow(17.0, (f64)o);
+					C->value[i][j][k] += A->value[i - o][j][k] *
+											B->value[i - o][j][k] / pow(17.0, (f64)o);
+					C->value[i][j][k] += A->value[i][j + o][k] *
+											B->value[i][j + o][k] / pow(17.0, (f64)o);
+					C->value[i][j][k] += A->value[i][j - o][k] *
+											B->value[i][j - o][k] / pow(17.0, (f64)o);
+					C->value[i][j][k] += A->value[i][j][k + o] *
+											B->value[i][j][k + o] / pow(17.0, (f64)o);
+					C->value[i][j][k] += A->value[i][j][k - o] *
+											B->value[i][j][k - o] / pow(17.0, (f64)o);
 				}
 			}
 		}
@@ -73,21 +73,21 @@ void solve_jacobi_blocked(mesh_t* A, mesh_t const* B, mesh_t* C) {
 				for (usz k = kk; k < min_k; ++k) {
 					for (usz j = jj; j < min_j; ++j) {
 						for (usz i = ii; i < min_i; ++i) {
-							C->cells.value[i][j][k] = A->cells.value[i][j][k] * B->cells.value[i][j][k];
+							C->value[i][j][k] = A->value[i][j][k] * B->value[i][j][k];
 
 							for (usz o = 1; o <= STENCIL_ORDER; ++o) {
-								C->cells.value[i][j][k] += A->cells.value[i + o][j][k] *
-														B->cells.value[i + o][j][k] / pow(17.0, (f64)o);
-								C->cells.value[i][j][k] += A->cells.value[i - o][j][k] *
-														B->cells.value[i - o][j][k] / pow(17.0, (f64)o);
-								C->cells.value[i][j][k] += A->cells.value[i][j + o][k] *
-														B->cells.value[i][j + o][k] / pow(17.0, (f64)o);
-								C->cells.value[i][j][k] += A->cells.value[i][j - o][k] *
-														B->cells.value[i][j - o][k] / pow(17.0, (f64)o);
-								C->cells.value[i][j][k] += A->cells.value[i][j][k + o] *
-														B->cells.value[i][j][k + o] / pow(17.0, (f64)o);
-								C->cells.value[i][j][k] += A->cells.value[i][j][k - o] *
-														B->cells.value[i][j][k - o] / pow(17.0, (f64)o);
+								C->value[i][j][k] += A->value[i + o][j][k] *
+														B->value[i + o][j][k] / pow(17.0, (f64)o);
+								C->value[i][j][k] += A->value[i - o][j][k] *
+														B->value[i - o][j][k] / pow(17.0, (f64)o);
+								C->value[i][j][k] += A->value[i][j + o][k] *
+														B->value[i][j + o][k] / pow(17.0, (f64)o);
+								C->value[i][j][k] += A->value[i][j - o][k] *
+														B->value[i][j - o][k] / pow(17.0, (f64)o);
+								C->value[i][j][k] += A->value[i][j][k + o] *
+														B->value[i][j][k + o] / pow(17.0, (f64)o);
+								C->value[i][j][k] += A->value[i][j][k - o] *
+														B->value[i][j][k - o] / pow(17.0, (f64)o);
 							}
 						}
 					}
