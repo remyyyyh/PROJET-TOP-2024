@@ -66,8 +66,8 @@ void solve_jacobi_blocked(mesh_t* A, mesh_t const* B, mesh_t* C) {
         for (usz jj = STENCIL_ORDER; jj < dim_y - STENCIL_ORDER; jj += BJ) {
             for (usz ii = STENCIL_ORDER; ii < dim_x - STENCIL_ORDER; ii += BI) {
 				min_i = min(ii + BI, dim_x - STENCIL_ORDER);
-				min_j = min(ii + BJ, dim_y - STENCIL_ORDER);
-				min_k = min(ii + BK, dim_z - STENCIL_ORDER);
+				min_j = min(jj + BJ, dim_y - STENCIL_ORDER);
+				min_k = min(kk + BK, dim_z - STENCIL_ORDER);
 
 
 				for (usz k = kk; k < min_k; ++k) {
