@@ -49,10 +49,12 @@ static void save_results(
     MPI_Allreduce(&loc_ns_per_elem, &glob_ns_per_elem, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
     if (mid_x_is_in && mid_y_is_in && mid_z_is_in) {
+        f64(*restrict span_value)[mesh->dim_y][mesh->dim_z] = (f64(*)[mesh->dim_y][mesh->dim_z])mesh->value;
+
         fprintf(
             ofp,
             "%+18.15lf %12.9lf %12.3lf %zu %zu %zu\n",
-            mesh->value[mid_x - comm_handler->coord_x + STENCIL_ORDER]
+            span_value[mid_x - comm_handler->coord_x + STENCIL_ORDER]
                        [mid_y - comm_handler->coord_y + STENCIL_ORDER]
                        [mid_z - comm_handler->coord_z + STENCIL_ORDER],
             glob_elapsed_s / (f64)comm_size,

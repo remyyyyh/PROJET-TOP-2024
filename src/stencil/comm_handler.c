@@ -124,18 +124,20 @@ static void ghost_exchange_left_right(
         return;
     }
 
+    f64(*restrict span_value)[mesh->dim_y][mesh->dim_z] = (f64(*)[mesh->dim_y][mesh->dim_z])mesh->value;
+
     for (usz i = x_start; i < x_start + STENCIL_ORDER; ++i) {
         for (usz j = 0; j < mesh->dim_y; ++j) {
             for (usz k = 0; k < mesh->dim_z; ++k) {
                 switch (comm_kind) {
                     case COMM_KIND_SEND_OP:
                         MPI_Send(
-                            &mesh->value[i][j][k], 1, MPI_DOUBLE, target, 0, MPI_COMM_WORLD
+                            &span_value[i][j][k], 1, MPI_DOUBLE, target, 0, MPI_COMM_WORLD
                         );
                         break;
                     case COMM_KIND_RECV_OP:
                         MPI_Recv(
-                            &mesh->value[i][j][k],
+                            &span_value[i][j][k],
                             1,
                             MPI_DOUBLE,
                             target,
@@ -158,6 +160,7 @@ static void ghost_exchange_top_bottom(
     if (target < 0) {
         return;
     }
+    f64(*restrict span_value)[mesh->dim_y][mesh->dim_z] = (f64(*)[mesh->dim_y][mesh->dim_z])mesh->value;
 
     for (usz i = 0; i < mesh->dim_x; ++i) {
         for (usz j = y_start; j < y_start + STENCIL_ORDER; ++j) {
@@ -165,12 +168,12 @@ static void ghost_exchange_top_bottom(
                 switch (comm_kind) {
                     case COMM_KIND_SEND_OP:
                         MPI_Send(
-                            &mesh->value[i][j][k], 1, MPI_DOUBLE, target, 0, MPI_COMM_WORLD
+                            &span_value[i][j][k], 1, MPI_DOUBLE, target, 0, MPI_COMM_WORLD
                         );
                         break;
                     case COMM_KIND_RECV_OP:
                         MPI_Recv(
-                            &mesh->value[i][j][k],
+                            &span_value[i][j][k],
                             1,
                             MPI_DOUBLE,
                             target,
@@ -193,6 +196,7 @@ static void ghost_exchange_front_back(
     if (target < 0) {
         return;
     }
+    f64(*restrict span_value)[mesh->dim_y][mesh->dim_z] = (f64(*)[mesh->dim_y][mesh->dim_z])mesh->value;
 
     for (usz i = 0; i < mesh->dim_x; ++i) {
         for (usz j = 0; j < mesh->dim_y; ++j) {
@@ -200,12 +204,12 @@ static void ghost_exchange_front_back(
                 switch (comm_kind) {
                     case COMM_KIND_SEND_OP:
                         MPI_Send(
-                            &mesh->value[i][j][k], 1, MPI_DOUBLE, target, 0, MPI_COMM_WORLD
+                            &span_value[i][j][k], 1, MPI_DOUBLE, target, 0, MPI_COMM_WORLD
                         );
                         break;
                     case COMM_KIND_RECV_OP:
                         MPI_Recv(
-                            &mesh->value[i][j][k],
+                            &span_value[i][j][k],
                             1,
                             MPI_DOUBLE,
                             target,
@@ -249,5 +253,7 @@ void comm_handler_ghost_exchange(comm_handler_t const* self, mesh_t* mesh) {
     ghost_exchange_front_back(self, mesh, COMM_KIND_RECV_OP, self->id_back, mesh->dim_z - STENCIL_ORDER);
 
     // Need to synchronize all remaining in-flight communications before exiting
-    MPI_Syncall(MPI_COMM_WORLD);
+    // MPI_Syncall(MPI_COMM_WORLD);
+    MPI_Barrier(MPI_COMM_WORLD);
+
 }

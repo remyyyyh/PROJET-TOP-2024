@@ -11,12 +11,15 @@ static f64 compute_core_pressure(usz i, usz j, usz k) {
 }
 
 static void setup_mesh_cell_values(mesh_t* mesh, comm_handler_t const* comm_handler) {
+
+    f64(*restrict span_value)[mesh->dim_y][mesh->dim_z] = (f64(*)[mesh->dim_y][mesh->dim_z])mesh->value;
+
     for (usz i = 0; i < mesh->dim_x; ++i) {
         for (usz j = 0; j < mesh->dim_y; ++j) {
             for (usz k = 0; k < mesh->dim_z; ++k) {
                 switch (mesh->kind) {
                     case MESH_KIND_CONSTANT:
-                        mesh->value[i][j][k] = compute_core_pressure(
+                        span_value[i][j][k] = compute_core_pressure(
                             comm_handler->coord_x + i,
                             comm_handler->coord_y + j,
                             comm_handler->coord_z + k
@@ -27,13 +30,13 @@ static void setup_mesh_cell_values(mesh_t* mesh, comm_handler_t const* comm_hand
                             (j >= STENCIL_ORDER && (j < mesh->dim_y - STENCIL_ORDER)) &&
                             (k >= STENCIL_ORDER && (k < mesh->dim_z - STENCIL_ORDER)))
                         {
-                            mesh->value[i][j][k] = 1.0;
+                            span_value[i][j][k] = 1.0;
                         } else {
-                            mesh->value[i][j][k] = 0.0;
+                            span_value[i][j][k] = 0.0;
                         }
                         break;
                     case MESH_KIND_OUTPUT:
-                        mesh->value[i][j][k] = 0.0;
+                        span_value[i][j][k] = 0.0;
                         break;
                     default:
                         __builtin_unreachable();
@@ -44,10 +47,13 @@ static void setup_mesh_cell_values(mesh_t* mesh, comm_handler_t const* comm_hand
 }
 
 static void setup_mesh_cell_kinds(mesh_t* mesh) {
+
+    cell_kind_t(*restrict span_kind)[mesh->dim_y][mesh->dim_z] = (cell_kind_t(*)[mesh->dim_y][mesh->dim_z])mesh->value;
+
     for (usz i = 0; i < mesh->dim_x; ++i) {
         for (usz j = 0; j < mesh->dim_y; ++j) {
             for (usz k = 0; k < mesh->dim_z; ++k) {
-                mesh->kind_cell[i][j][k] = mesh_set_cell_kind(mesh, i, j, k);
+                span_kind[i][j][k] = mesh_set_cell_kind(mesh, i, j, k);
             }
         }
     }
