@@ -57,8 +57,8 @@ void mesh_print(mesh_t const *self, char const *name)
         self->dim_y,
         self->dim_z);
 
-	f64(*restrict span_value)[self->dim_y][self->dim_z] = (f64(*)[self->dim_y][self->dim_z])self->value;
-	cell_kind_t(*restrict span_kind)[self->dim_y][self->dim_z] = (cell_kind_t(*)[self->dim_y][self->dim_z])self->kind_cell;
+    f64(*restrict span_value)[self->dim_y][self->dim_z] = (f64(*)[self->dim_y][self->dim_z])self->value;
+    cell_kind_t(*restrict span_kind)[self->dim_y][self->dim_z] = (cell_kind_t(*)[self->dim_y][self->dim_z])self->kind_cell;
 
     for (usz i = 0; i < self->dim_x; ++i)
     {
@@ -101,15 +101,16 @@ void mesh_copy_core(mesh_t *dst, mesh_t const *src)
     cell_kind_t(*restrict dst_kind)[dst->dim_y][dst->dim_z] = (cell_kind_t(*)[dst->dim_y][dst->dim_z])dst->kind_cell;
     cell_kind_t(*restrict src_kind)[dst->dim_y][dst->dim_z] = (cell_kind_t(*)[dst->dim_y][dst->dim_z])src->kind_cell;
 
-	f64(*restrict dst_value)[dst->dim_y][dst->dim_z] = (f64(*)[dst->dim_y][dst->dim_z])dst->value;
-	f64(*restrict src_value)[dst->dim_y][dst->dim_z] = (f64(*)[dst->dim_y][dst->dim_z])src->value;
+    f64(*restrict dst_value)[dst->dim_y][dst->dim_z] = (f64(*)[dst->dim_y][dst->dim_z])dst->value;
+    f64(*restrict src_value)[dst->dim_y][dst->dim_z] = (f64(*)[dst->dim_y][dst->dim_z])src->value;
 
-    for (usz k = STENCIL_ORDER; k < dst->dim_z - STENCIL_ORDER; ++k)
+    for (usz i = STENCIL_ORDER; i < dst->dim_x - STENCIL_ORDER; ++i)
     {
         for (usz j = STENCIL_ORDER; j < dst->dim_y - STENCIL_ORDER; ++j)
         {
-            for (usz i = STENCIL_ORDER; i < dst->dim_x - STENCIL_ORDER; ++i)
+            for (usz k = STENCIL_ORDER; k < dst->dim_z - STENCIL_ORDER; ++k)
             {
+
                 assert(dst_kind[i][j][k] == CELL_KIND_CORE);
                 assert(src_kind[i][j][k] == CELL_KIND_CORE);
                 dst_value[i][j][k] = src_value[i][j][k];
