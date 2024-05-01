@@ -28,28 +28,30 @@ void solve_jacobi(mesh_t *A, mesh_t const *B, mesh_t *C)
     f64(*restrict B_span_value)[A->dim_y][A->dim_z] = (f64(*)[A->dim_y][A->dim_z])B->value;
     f64(*restrict C_span_value)[A->dim_y][A->dim_z] = (f64(*)[A->dim_y][A->dim_z])C->value;
 
-    for (usz k = STENCIL_ORDER; k < dim_z - STENCIL_ORDER; ++k)
+    f64 val;
+    f64 pow17[STENCIL_ORDER];
+    for (usz o = 0; o < STENCIL_ORDER; ++o)
+        pow17[o] = 1 / pow(17.0, (f64)(o + 1));
+
+    for (usz i = STENCIL_ORDER; i < dim_x - STENCIL_ORDER; ++i)
     {
         for (usz j = STENCIL_ORDER; j < dim_y - STENCIL_ORDER; ++j)
         {
-            for (usz i = STENCIL_ORDER; i < dim_x - STENCIL_ORDER; ++i)
+
+            for (usz k = STENCIL_ORDER; k < dim_z - STENCIL_ORDER; ++k)
             {
                 C_span_value[i][j][k] = A_span_value[i][j][k] * B_span_value[i][j][k];
 
                 for (usz o = 1; o <= STENCIL_ORDER; ++o)
                 {
-                    C_span_value[i][j][k] += A_span_value[i + o][j][k] *
-                                         B_span_value[i + o][j][k] / pow(17.0, (f64)o);
-                    C_span_value[i][j][k] += A_span_value[i - o][j][k] *
-                                         B_span_value[i - o][j][k] / pow(17.0, (f64)o);
-                    C_span_value[i][j][k] += A_span_value[i][j + o][k] *
-                                         B_span_value[i][j + o][k] / pow(17.0, (f64)o);
-                    C_span_value[i][j][k] += A_span_value[i][j - o][k] *
-                                         B_span_value[i][j - o][k] / pow(17.0, (f64)o);
-                    C_span_value[i][j][k] += A_span_value[i][j][k + o] *
-                                         B_span_value[i][j][k + o] / pow(17.0, (f64)o);
-                    C_span_value[i][j][k] += A_span_value[i][j][k - o] *
-                                         B_span_value[i][j][k - o] / pow(17.0, (f64)o);
+                    val = A_span_value[i + o][j][k] * B_span_value[i + o][j][k];
+                    val += A_span_value[i - o][j][k] * B_span_value[i - o][j][k];
+                    val += A_span_value[i][j + o][k] * B_span_value[i][j + o][k];
+                    val += A_span_value[i][j - o][k] * B_span_value[i][j - o][k];
+                    val += A_span_value[i][j][k + o] * B_span_value[i][j][k + o];
+                    val += A_span_value[i][j][k - o] * B_span_value[i][j][k - o];
+
+                    C_span_value[i][j][k] += val * pow17[o - 1];
                 }
             }
         }
@@ -97,17 +99,17 @@ void solve_jacobi_blocked(mesh_t *A, mesh_t const *B, mesh_t *C)
                             for (usz o = 1; o <= STENCIL_ORDER; ++o)
                             {
                                 C_span_value[i][j][k] += A_span_value[i + o][j][k] *
-                                                     B_span_value[i + o][j][k] / pow(17.0, (f64)o);
+                                                         B_span_value[i + o][j][k] / pow(17.0, (f64)o);
                                 C_span_value[i][j][k] += A_span_value[i - o][j][k] *
-                                                     B_span_value[i - o][j][k] / pow(17.0, (f64)o);
+                                                         B_span_value[i - o][j][k] / pow(17.0, (f64)o);
                                 C_span_value[i][j][k] += A_span_value[i][j + o][k] *
-                                                     B_span_value[i][j + o][k] / pow(17.0, (f64)o);
+                                                         B_span_value[i][j + o][k] / pow(17.0, (f64)o);
                                 C_span_value[i][j][k] += A_span_value[i][j - o][k] *
-                                                     B_span_value[i][j - o][k] / pow(17.0, (f64)o);
+                                                         B_span_value[i][j - o][k] / pow(17.0, (f64)o);
                                 C_span_value[i][j][k] += A_span_value[i][j][k + o] *
-                                                     B_span_value[i][j][k + o] / pow(17.0, (f64)o);
+                                                         B_span_value[i][j][k + o] / pow(17.0, (f64)o);
                                 C_span_value[i][j][k] += A_span_value[i][j][k - o] *
-                                                     B_span_value[i][j][k - o] / pow(17.0, (f64)o);
+                                                         B_span_value[i][j][k - o] / pow(17.0, (f64)o);
                             }
                         }
                     }
