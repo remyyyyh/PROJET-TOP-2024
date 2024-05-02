@@ -7,9 +7,11 @@
 
 #define MAXLEN 8UL
 
-static u32 gcd(u32 a, u32 b) {
+static u32 gcd(u32 a, u32 b)
+{
     u32 c;
-    while (b != 0) {
+    while (b != 0)
+    {
         c = a % b;
         a = b;
         b = c;
@@ -17,23 +19,25 @@ static u32 gcd(u32 a, u32 b) {
     return a;
 }
 
-static char* stringify(char buf[static MAXLEN], i32 num) {
+static char *stringify(char buf[static MAXLEN], i32 num)
+{
     snprintf(buf, MAXLEN, "%d", num);
     return buf;
 }
 
-comm_handler_t comm_handler_new(u32 rank, u32 comm_size, usz dim_x, usz dim_y, usz dim_z) {
+comm_handler_t comm_handler_new(u32 rank, u32 comm_size, usz dim_x, usz dim_y, usz dim_z)
+{
     // Compute splitting
     u32 const nb_z = gcd(comm_size, (u32)(dim_x * dim_y));
     u32 const nb_y = gcd(comm_size / nb_z, (u32)dim_z);
     u32 const nb_x = (comm_size / nb_z) / nb_y;
 
-    if (comm_size != nb_x * nb_y * nb_z) {
+    if (comm_size != nb_x * nb_y * nb_z)
+    {
         error(
             "splitting does not match MPI communicator size\n -> expected %u, got %u",
             comm_size,
-            nb_x * nb_y * nb_z
-        );
+            nb_x * nb_y * nb_z);
     }
 
     // Compute current rank position
@@ -78,7 +82,8 @@ comm_handler_t comm_handler_new(u32 rank, u32 comm_size, usz dim_x, usz dim_y, u
     };
 }
 
-void comm_handler_print(comm_handler_t const* self) {
+void comm_handler_print(comm_handler_t const *self)
+{
     i32 rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     static char bt[MAXLEN];
@@ -108,125 +113,118 @@ void comm_handler_print(comm_handler_t const* self) {
         self->id_left < 0 ? " -" : stringify(bl, self->id_left),
         self->id_right < 0 ? " -" : stringify(br, self->id_right),
         self->id_front < 0 ? " -" : stringify(bf, self->id_front),
-        self->id_bottom < 0 ? " -" : stringify(bd, self->id_bottom)
-    );
+        self->id_bottom < 0 ? " -" : stringify(bd, self->id_bottom));
 }
 
-static i32 MPI_Syncall_callback(MPI_Comm comm) {
+static i32 MPI_Syncall_callback(MPI_Comm comm)
+{
     return (i32)__builtin_sync_proc(comm);
 }
-static MPI_Syncfunc_t* MPI_Syncall = MPI_Syncall_callback;
+static MPI_Syncfunc_t *MPI_Syncall = MPI_Syncall_callback;
 
 static void ghost_exchange_left_right(
-    comm_handler_t const* self, mesh_t* mesh, comm_kind_t comm_kind, i32 target, usz x_start
-) {
-    if (target < 0) {
+    comm_handler_t const *self, mesh_t *mesh, comm_kind_t comm_kind, i32 target, usz x_start)
+{
+    if (target < 0)
+    {
         return;
     }
-
+    usz size_buffer =  mesh->dim_y * mesh->dim_z;
     f64(*restrict span_value)[mesh->dim_y][mesh->dim_z] = (f64(*)[mesh->dim_y][mesh->dim_z])mesh->value;
 
-    for (usz i = x_start; i < x_start + STENCIL_ORDER; ++i) {
-        for (usz j = 0; j < mesh->dim_y; ++j) {
-            for (usz k = 0; k < mesh->dim_z; ++k) {
-                switch (comm_kind) {
-                    case COMM_KIND_SEND_OP:
-                        MPI_Send(
-                            &span_value[i][j][k], 1, MPI_DOUBLE, target, 0, MPI_COMM_WORLD
-                        );
-                        break;
-                    case COMM_KIND_RECV_OP:
-                        MPI_Recv(
-                            &span_value[i][j][k],
-                            1,
-                            MPI_DOUBLE,
-                            target,
-                            0,
-                            MPI_COMM_WORLD,
-                            MPI_STATUS_IGNORE
-                        );
-                        break;
-                    default:
-                        __builtin_unreachable();
-                }
-            }
+    for (usz i = 0; i < STENCIL_ORDER; ++i)
+    {
+        switch (comm_kind)
+        {
+        case COMM_KIND_SEND_OP:
+            MPI_Send(&span_value[i + x_start][0][0], size_buffer, MPI_DOUBLE, target, 0, MPI_COMM_WORLD);
+            break;
+        case COMM_KIND_RECV_OP:
+            MPI_Recv(&span_value[i + x_start][0][0], size_buffer, MPI_DOUBLE, target, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            break;
+        default:
+            __builtin_unreachable();
         }
     }
 }
 
 static void ghost_exchange_top_bottom(
-    comm_handler_t const* self, mesh_t* mesh, comm_kind_t comm_kind, i32 target, usz y_start
-) {
-    if (target < 0) {
+    comm_handler_t const *self, mesh_t *mesh, comm_kind_t comm_kind, i32 target, usz y_start)
+{
+    if (target < 0)
+    {
         return;
     }
     f64(*restrict span_value)[mesh->dim_y][mesh->dim_z] = (f64(*)[mesh->dim_y][mesh->dim_z])mesh->value;
+    usz size_buffer =  mesh->dim_z * STENCIL_ORDER;
 
-    for (usz i = 0; i < mesh->dim_x; ++i) {
-        for (usz j = y_start; j < y_start + STENCIL_ORDER; ++j) {
-            for (usz k = 0; k < mesh->dim_z; ++k) {
-                switch (comm_kind) {
-                    case COMM_KIND_SEND_OP:
-                        MPI_Send(
-                            &span_value[i][j][k], 1, MPI_DOUBLE, target, 0, MPI_COMM_WORLD
-                        );
-                        break;
-                    case COMM_KIND_RECV_OP:
-                        MPI_Recv(
-                            &span_value[i][j][k],
-                            1,
-                            MPI_DOUBLE,
-                            target,
-                            0,
-                            MPI_COMM_WORLD,
-                            MPI_STATUS_IGNORE
-                        );
-                        break;
-                    default:
-                        __builtin_unreachable();
-                }
-            }
+    for (usz i = 0; i < mesh->dim_x; ++i)
+    {
+        switch (comm_kind)
+        {
+        case COMM_KIND_SEND_OP:
+            MPI_Send(&span_value[i][y_start][0], size_buffer, MPI_DOUBLE, target, 0, MPI_COMM_WORLD);
+            break;
+        case COMM_KIND_RECV_OP:
+            MPI_Recv(&span_value[i][y_start][0], size_buffer, MPI_DOUBLE, target, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            break;
+        default:
+            __builtin_unreachable();
         }
     }
 }
 
 static void ghost_exchange_front_back(
-    comm_handler_t const* self, mesh_t* mesh, comm_kind_t comm_kind, i32 target, usz z_start
-) {
-    if (target < 0) {
+    comm_handler_t const *self, mesh_t *mesh, comm_kind_t comm_kind, i32 target, usz z_start)
+{
+    if (target < 0)
+    {
         return;
     }
-    f64(*restrict span_value)[mesh->dim_y][mesh->dim_z] = (f64(*)[mesh->dim_y][mesh->dim_z])mesh->value;
 
-    for (usz i = 0; i < mesh->dim_x; ++i) {
-        for (usz j = 0; j < mesh->dim_y; ++j) {
-            for (usz k = z_start; k < z_start + STENCIL_ORDER; ++k) {
-                switch (comm_kind) {
-                    case COMM_KIND_SEND_OP:
-                        MPI_Send(
-                            &span_value[i][j][k], 1, MPI_DOUBLE, target, 0, MPI_COMM_WORLD
-                        );
-                        break;
-                    case COMM_KIND_RECV_OP:
-                        MPI_Recv(
-                            &span_value[i][j][k],
-                            1,
-                            MPI_DOUBLE,
-                            target,
-                            0,
-                            MPI_COMM_WORLD,
-                            MPI_STATUS_IGNORE
-                        );
-                        break;
-                    default:
-                        __builtin_unreachable();
+    f64(*restrict span_value)[mesh->dim_y][mesh->dim_z] = (f64(*)[mesh->dim_y][mesh->dim_z])mesh->value;
+    usz size_buffer =  mesh->dim_y * STENCIL_ORDER;
+    f64 buffer[mesh->dim_y][STENCIL_ORDER];
+
+    switch (comm_kind)
+    {
+    case COMM_KIND_SEND_OP:
+
+        for (usz i = 0; i < mesh->dim_x; ++i)
+        {
+            for (usz j = 0; j < mesh->dim_y; ++j)
+            {
+                for (usz k = 0; k < STENCIL_ORDER; ++k)
+                {
+                    buffer[j][k] = span_value[i][j][z_start + k];
+                }
+            }
+            MPI_Send(&buffer, size_buffer, MPI_DOUBLE, target, 0, MPI_COMM_WORLD);
+        }
+        break;
+
+    case COMM_KIND_RECV_OP:
+
+        for (usz i = 0; i < mesh->dim_x; ++i)
+        {
+            MPI_Recv(&buffer[0][0], size_buffer, MPI_DOUBLE, target, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            for (usz j = 0; j < mesh->dim_y; ++j)
+            {
+                for (usz k = 0; k < STENCIL_ORDER; ++k)
+                {
+                    span_value[i][j][z_start + k] = buffer[j][k];
                 }
             }
         }
+
+        break;
+    default:
+        __builtin_unreachable();
     }
 }
 
-void comm_handler_ghost_exchange(comm_handler_t const* self, mesh_t* mesh) {
+void comm_handler_ghost_exchange(comm_handler_t const *self, mesh_t *mesh)
+{
     // Left to right phase
     ghost_exchange_left_right(self, mesh, COMM_KIND_SEND_OP, self->id_right, mesh->dim_x - 2 * STENCIL_ORDER);
     ghost_exchange_left_right(self, mesh, COMM_KIND_RECV_OP, self->id_left, 0);
@@ -255,5 +253,4 @@ void comm_handler_ghost_exchange(comm_handler_t const* self, mesh_t* mesh) {
     // Need to synchronize all remaining in-flight communications before exiting
     // MPI_Syncall(MPI_COMM_WORLD);
     MPI_Barrier(MPI_COMM_WORLD);
-
 }
