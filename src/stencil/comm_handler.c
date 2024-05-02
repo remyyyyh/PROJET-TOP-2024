@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include <string.h>
 
 #define MAXLEN 8UL
 
@@ -194,10 +195,7 @@ static void ghost_exchange_front_back(
         {
             for (usz j = 0; j < mesh->dim_y; ++j)
             {
-                for (usz k = 0; k < STENCIL_ORDER; ++k)
-                {
-                    buffer[j][k] = span_value[i][j][z_start + k];
-                }
+                memcpy(buffer[j], &span_value[i][j][z_start], sizeof(f64) * STENCIL_ORDER );
             }
             MPI_Send(&buffer, size_buffer, MPI_DOUBLE, target, 0, MPI_COMM_WORLD);
         }
@@ -210,10 +208,7 @@ static void ghost_exchange_front_back(
             MPI_Recv(&buffer[0][0], size_buffer, MPI_DOUBLE, target, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             for (usz j = 0; j < mesh->dim_y; ++j)
             {
-                for (usz k = 0; k < STENCIL_ORDER; ++k)
-                {
-                    span_value[i][j][z_start + k] = buffer[j][k];
-                }
+                memcpy(&span_value[i][j][z_start], buffer[j],sizeof(f64) * STENCIL_ORDER );
             }
         }
 
