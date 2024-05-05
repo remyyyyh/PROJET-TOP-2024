@@ -190,7 +190,6 @@ static void ghost_exchange_front_back(
     switch (comm_kind)
     {
     case COMM_KIND_SEND_OP:
-
         for (usz i = 0; i < mesh->dim_x; ++i)
         {
             for (usz j = 0; j < mesh->dim_y; ++j)
