@@ -16,6 +16,7 @@ usz BJ = 8;
 usz BK = 4096;
 
 
+#pragma omp declare simd 
 void solve_jacobi(mesh_t *A, mesh_t const *B, mesh_t *C)
 {
 	assert(A->dim_x == B->dim_x && B->dim_x == C->dim_x);
@@ -50,7 +51,7 @@ void solve_jacobi(mesh_t *A, mesh_t const *B, mesh_t *C)
                 {
                     for (usz j = jj; j < min_j; ++j)
                     {
-                        #pragma omp simd
+                        #pragma omp simd aligned(A_span_value, B_span_value, C_span_value:32)
                         for (usz k = kk; k < min_k; ++k)
                         {
                             f64 sum = A_span_value[i][j][k] * B_span_value[i][j][k];

@@ -9,8 +9,8 @@ mesh_t mesh_new(usz dim_x, usz dim_y, usz dim_z, mesh_kind_t kind)
 {
     usz const ghost_size = 2 * STENCIL_ORDER;
 
-    cell_kind_t *kind_cell = malloc(sizeof(cell_kind_t) * (dim_x + ghost_size) * (dim_y + ghost_size) * (dim_z + ghost_size));
-    f64 *value = malloc(sizeof(f64) * (dim_x + ghost_size) * (dim_y + ghost_size) * (dim_z + ghost_size));
+    cell_kind_t *kind_cell = aligned_alloc(32,sizeof(cell_kind_t) * (dim_x + ghost_size) * (dim_y + ghost_size) * (dim_z + ghost_size));
+    f64 *value = aligned_alloc(32,sizeof(f64) * (dim_x + ghost_size) * (dim_y + ghost_size) * (dim_z + ghost_size));
 
     return (mesh_t){
         .dim_x = dim_x + ghost_size,
