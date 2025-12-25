@@ -16,7 +16,6 @@ usz BJ = 8;
 usz BK = 4096;
 
 
-#pragma omp declare simd 
 void solve_jacobi(mesh_t *A, mesh_t const *B, mesh_t *C)
 {
 	assert(A->dim_x == B->dim_x && B->dim_x == C->dim_x);
@@ -36,7 +35,7 @@ void solve_jacobi(mesh_t *A, mesh_t const *B, mesh_t *C)
 	for (usz o = 0; o < STENCIL_ORDER; ++o)
         pow17[o] = 1.0 / pow(17.0, (f64)(o + 1));
 
-	#pragma omp parallel for 
+	#pragma omp parallel for schedule(dynamic)
     for (usz ii = STENCIL_ORDER; ii < dim_x - STENCIL_ORDER; ii += BI)
     {
         for (usz jj = STENCIL_ORDER; jj < dim_y - STENCIL_ORDER; jj += BJ)
