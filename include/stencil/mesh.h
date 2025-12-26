@@ -41,9 +41,6 @@ void mesh_drop(mesh_t* self);
 /// Prints a mesh.
 void mesh_print(mesh_t const* self, char const* name);
 
-/// Gets the kind of a cell in a mesh given its coordinates.
-cell_kind_t mesh_set_cell_kind(mesh_t const* self, usz i, usz j, usz k);
-
 /// Copies the inner part of a mesh into another.
 void mesh_copy_core(mesh_t* dst, mesh_t const* src);
 

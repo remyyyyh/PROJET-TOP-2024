@@ -78,19 +78,6 @@ void mesh_print(mesh_t const *self, char const *name)
     }
 }
 
-cell_kind_t mesh_set_cell_kind(mesh_t const *self, usz i, usz j, usz k)
-{
-    if ((i >= STENCIL_ORDER && i < self->dim_x - STENCIL_ORDER) &&
-        (j >= STENCIL_ORDER && j < self->dim_y - STENCIL_ORDER) &&
-        (k >= STENCIL_ORDER && k < self->dim_z - STENCIL_ORDER))
-    {
-        return CELL_KIND_CORE;
-    }
-    else
-    {
-        return CELL_KIND_PHANTOM;
-    }
-}
 
 void mesh_copy_core(mesh_t *dst, mesh_t const *src)
 {
@@ -98,23 +85,12 @@ void mesh_copy_core(mesh_t *dst, mesh_t const *src)
     assert(dst->dim_y == src->dim_y);
     assert(dst->dim_z == src->dim_z);
 
-    cell_kind_t(*restrict dst_kind)[dst->dim_y][dst->dim_z] = (cell_kind_t(*)[dst->dim_y][dst->dim_z])dst->kind_cell;
-    cell_kind_t(*restrict src_kind)[dst->dim_y][dst->dim_z] = (cell_kind_t(*)[dst->dim_y][dst->dim_z])src->kind_cell;
-
     f64(*restrict dst_value)[dst->dim_y][dst->dim_z] = (f64(*)[dst->dim_y][dst->dim_z])dst->value;
     f64(*restrict src_value)[dst->dim_y][dst->dim_z] = (f64(*)[dst->dim_y][dst->dim_z])src->value;
 
     for (usz i = STENCIL_ORDER; i < dst->dim_x - STENCIL_ORDER; ++i)
-    {
         for (usz j = STENCIL_ORDER; j < dst->dim_y - STENCIL_ORDER; ++j)
-        {
             for (usz k = STENCIL_ORDER; k < dst->dim_z - STENCIL_ORDER; ++k)
-            {
-
-                assert(dst_kind[i][j][k] == CELL_KIND_CORE);
-                assert(src_kind[i][j][k] == CELL_KIND_CORE);
                 dst_value[i][j][k] = src_value[i][j][k];
-            }
-        }
-    }
+
 }
